@@ -1,0 +1,84 @@
+pragma solidity ^0.4.0;
+
+contract InsuranceOffer {
+  struct Policy {
+    address addr;
+    uint startTime;
+    bool active;
+  }
+  address public owner;
+  uint public numActPolicies;
+  uint private numPolicies;
+  uint private policyTime;
+  uint private currentAmount;
+  uint private premium;
+  uint private claim;
+  uint public beginTime;
+  mapping (uint => Policy) policies;
+
+  modifier onlyBy(address _account)
+    {
+        require(msg.sender == _account);
+        _;
+    }
+
+    function InsuranceOffer (uint _policytime, uint _premium, uint _claim) payable {
+      if(msg.value < (_claim * 1 ether * 5)) throw;
+
+      owner = msg.sender;
+      numActPolicies = 0;
+      numPolicies = 0;
+      claim = _claim * 1 ether;
+      policyTime = _policytime * 1 minutes;
+      premium = _premium * 1 ether;
+      currentAmount = msg.value;
+    }
+
+    function buyPolicy() payable {
+      if(currentAmount < (numActPolicies*claim) + claim) throw;
+      if(msg.value < premium) throw;
+
+      currentAmount += msg.value;
+      policies[numPolicies] = Policy(msg.sender, block.timestamp, true);
+      numPolicies += 1;
+      numActPolicies += 1;
+    }
+
+    function setStartTime() {
+    beginTime = policies[0].startTime;
+    }
+
+     function checkPolicies() private{
+      uint i = 0;
+      while(i <= numPolicies){
+      if(policies[i].startTime + policyTime > block.timestamp){
+        policies[i].active = false;
+        numActPolicies -= 1;
+      }
+      i++;
+      }
+    }
+
+    function sendClaims() onlyBy(owner) {
+      uint i = 0;
+      checkPolicies();
+      while(i <= numPolicies){
+        if(policies[i].active == true){
+          policies[i].active = false;
+          numActPolicies -= 1;
+          if(!policies[i].addr.send(claim)) throw;
+          //if(!backers[i].addr.send(backers[i].amount)) throw;
+        }
+        i++;
+      }
+    }
+
+    function extract(uint _amount) onlyBy(owner) {
+      checkPolicies();
+      if(_amount > currentAmount - (numActPolicies*claim)) throw;
+      if(!owner.send(_amount * 1 ether)) throw;
+      currentAmount -= _amount;
+
+
+    }
+    }
