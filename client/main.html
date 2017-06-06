@@ -1,0 +1,22 @@
+<head>
+    <title>Customer UI</title>
+</head>
+
+<body>
+<h1>Welcome to Smart Insurance!</h1>
+
+{{> hello}}
+{{> info}}
+</body>
+
+<template name="hello">
+    <p> This policy costs 10 Ether. If you damage your car you get 20 Ether back. </p>
+    <button>Buy a policy</button>
+    <p>Number of active policies:{{counter}}{{TemplateVar.get "numActPol"}}</p>
+</template>
+
+<template name="info">
+    <h2>Smart Insurance!</h2>
+
+    <input type="button" value="BUTTON" onclick='alert("Button wurde geklickt")' />
+</template>
